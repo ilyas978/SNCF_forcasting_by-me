@@ -1,69 +1,7 @@
-# SNCF Delay Forecasting — End-to-End ML Pipeline
+# Train Waiting Time Forecasting – Transilien SNCF Voyageurs
 
-Prediction of train delays using a LightGBM model served via a FastAPI REST API, containerized with Docker and deployed on Render.
+### 🛠 Feature Engineering & Importance
+The model’s predictive power was driven by a robust feature set designed to capture the "pulse" of the SNCF network. I engineered **lag variables** to track historical delays, **cyclical temporal encodings** (sine/cosine transforms) for periodicity, and **station-level aggregations** to identify systemic bottlenecks. Using **Gain-based Feature Importance**, I verified that recent lag observations and station traffic density were the primary drivers of model accuracy, allowing for a refined, noise-reduced feature set.
 
-## Architecture
-
-```
-Raw Data → Feature Engineering → LightGBM Model → FastAPI → Docker → Render
-```
-
-## Project Structure
-
-```
-├── main.py          # FastAPI app
-├── model.py         # Model loader
-├── features.py      # Feature engineering
-├── models/
-│   └── model_lgb.pkl
-├── Dockerfile
-└── requirements.txt
-```
-
-## Run locally
-
-```bash
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-## Run with Docker
-
-```bash
-docker build -t sncf-api .
-docker run -p 8000:8000 sncf-api
-```
-
-## API Usage
-
-**POST** `/predict`
-
-```json
-{
-  "date": "2023-11-13",
-  "train": "ZPQEKP",
-  "gare": "VXY",
-  "arret": 0,
-  "p0q2": -4.0,
-  "p0q3": -2.0,
-  "p0q4": -4.0,
-  "p2q0": 0.0,
-  "p3q0": 0.0,
-  "p4q0": -2.0
-}
-```
-
-**Response**
-
-```json
-{
-  "prediction": -1.52
-}
-```
-
-## Model
-
-- Algorithm: LightGBM
-- Target: `p0q0` (delay in minutes)
-- Features: 27 engineered features (lag, trends, time, station stats)
-- Evaluation metric: MAE
+### 📊 Model Comparison & Hyperparameter Tuning
+To move beyond a baseline **Linear Regression (MAE: 0.84)**, I benchmarked several architectures, including Random Forest and XGBoost. **LightGBM** emerged as the superior model, offering the best balance of training speed and error reduction on the 667k-row dataset. I optimized the final model through a **Randomized Search** over the hyperparameter space—specifically tuning `num_leaves`, `feature_fraction`, and `learning_rate` with early stopping—ultimately achieving a **Top 10 ranking** with a final **MAE of 0.65** (a **~22% improvement**).
