@@ -1,16 +1,19 @@
-import joblib
+import lightgbm as lgb
 import pandas as pd
-from pathlib import Path
+from huggingface_hub import hf_hub_download
 
-MODEL_PATH = Path(__file__).parent / "models" / "model_lgb.pkl"
+REPO_ID = "illyyyaaaasssss/sncf-model"
+FILENAME = "model_lgb.txt"
 
 class SNCFModel:
-    def __init__(self, model_path: Path = MODEL_PATH):
+    def __init__(self):
         try:
-            self.model = joblib.load(model_path)
-            print(f"Modèle chargé depuis : {model_path}")
+            print("Téléchargement du modèle depuis Hugging Face...")
+            model_path = hf_hub_download(repo_id=REPO_ID, filename=FILENAME)
+            self.model = lgb.Booster(model_file=model_path)
+            print("Modèle chargé avec succès !")
         except Exception as e:
-            print(f"ERREUR lors du chargement du modèle : {e}")
+            print(f"ERREUR : {e}")
             self.model = None
 
     def predict(self, input_df: pd.DataFrame):
